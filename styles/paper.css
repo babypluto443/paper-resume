@@ -1,0 +1,447 @@
+/* ==========================================================================
+   纸样 Resume · 纸张排版引擎
+   —— 把「排版意图」抽象成 CSS 变量，任何一项样式都可在界面上调
+   —— 模板只负责"骨架差异"，字号/行距/页边距/主色全部由变量驱动
+   ========================================================================== */
+
+.paper {
+  --accent: #173a86;
+  --accent-soft: color-mix(in srgb, var(--accent) 10%, transparent);
+  --ink: #1a1a1a;
+  --ink-2: #333;
+  --ink-3: #555;
+  --muted: #6b6b6b;
+  --hair: #d9d9d9;
+
+  --f-cn: 'Noto Sans SC';
+  --f-en: 'Archivo';
+  --fw: 400;
+  --fw-strong: 700;   /* 标题始终保持醒目，不随正文一起变细 */
+  --f-base: 10.5pt;
+  --lh: 1.45;
+  --fs-name: 26pt;
+  --fs-section: 13pt;
+
+  --gap: 12pt;          /* 模块间距 */
+  --m: 12mm;            /* 页边距 */
+  --scale: 1;           /* 内容密度 */
+
+  position: relative;
+  width: 210mm;
+  min-height: 297mm;
+  padding: var(--m);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-cn), var(--f-en), sans-serif;
+  font-size: var(--f-base);
+  line-height: var(--lh);
+  font-weight: var(--fw);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .3), 0 22px 60px rgba(0, 0, 0, .45);
+  overflow: hidden;
+  transform-origin: top left;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.paper.is-letter { width: 215.9mm; min-height: 279.4mm; }
+
+/* 离屏测量容器：与纸张同字体同变量，但不显示也不撑高度 */
+.paper.is-measure {
+  position: static;
+  box-shadow: none;
+  overflow: visible;
+  min-height: 0;
+}
+
+/* ---------- 头部 ---------- */
+.p-head { margin-bottom: calc(var(--gap) * 1.1); }
+.p-head__row { display: flex; align-items: flex-start; gap: calc(var(--m) * 0.7); }
+.p-head__main { flex: 1; min-width: 0; }
+.p-head__aside { flex: 0 0 auto; }
+
+.p-name {
+  margin: 0;
+  font-size: var(--fs-name);
+  font-weight: var(--fw-strong);
+  line-height: 1.12;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.p-name--accent { color: var(--accent); }
+
+.p-tagline {
+  margin: 3px 0 0;
+  font-size: calc(var(--f-base) * 1.06);
+  color: var(--accent);
+  font-weight: calc(var(--fw-strong) - 100);
+}
+
+.p-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 12px;
+  margin-top: 7px;
+  font-size: calc(var(--f-base) * 0.94);
+  color: var(--muted);
+  line-height: 1.5;
+}
+.p-contact__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.p-contact__item b { font-weight: 500; color: var(--ink-3); }
+.p-contact__item span { word-break: break-all; }
+.p-contact a { color: var(--muted); text-decoration: none; }
+.p-contact a:hover { color: var(--accent); }
+
+.p-photo {
+  width: 25mm;
+  height: 33mm;
+  border: 1px solid var(--hair);
+  border-radius: 1mm;
+  background: repeating-linear-gradient(45deg, #f4f2ee 0 6px, #efece7 6px 12px);
+  display: grid;
+  place-items: center;
+  font-size: 8pt;
+  color: #aaa;
+  overflow: hidden;
+}
+.p-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 对齐变体 */
+.p-head[data-align="center"] .p-head__row { justify-content: center; text-align: center; }
+.p-head[data-align="center"] .p-name,
+.p-head[data-align="center"] .p-contact { justify-content: center; }
+.p-head[data-align="center"] .p-contact { align-items: center; gap: 2px 16px; }
+.p-head[data-align="center"] .p-head__main { flex: 0 1 auto; }
+.p-head[data-align="center"] .p-head__aside { display: none; }
+
+.p-head[data-align="left"] .p-head__aside { display: none; }
+.p-head[data-align="split"] .p-head__row { justify-content: space-between; }
+.p-head[data-align="split"] .p-head__main { flex: 0 1 74%; }
+.p-head[data-align="split"] .p-head__aside { width: 25mm; }
+
+.p-summary {
+  margin: calc(var(--gap) * 0.6) 0 0;
+  font-size: calc(var(--f-base) * 0.98);
+  color: var(--ink-2);
+  text-align: justify;
+}
+
+/* ---------- 章节 ---------- */
+.p-sec { margin-top: var(--gap); }
+.p-sec:first-child { margin-top: calc(var(--gap) * 0.4); }
+
+.p-sec__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: calc(var(--gap) * 0.55);
+}
+.p-sec__title {
+  margin: 0;
+  font-size: var(--fs-section);
+  font-weight: var(--fw-strong);
+  color: var(--accent);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.p-sec__icon { font-size: calc(var(--fs-section) * 0.82); line-height: 1; color: var(--accent); }
+.p-sec__line { flex: 1; height: 1.5pt; background: var(--accent); opacity: 0.9; }
+.p-sec__en {
+  font-family: var(--f-en), var(--f-cn), sans-serif;
+  font-size: calc(var(--fs-section) * 0.66);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.p-sec__body { display: block; }
+.p-sec--side .p-sec__head { margin-bottom: calc(var(--gap) * 0.45); }
+.p-sec--side .p-sec__title { font-size: calc(var(--fs-section) * 0.82); }
+.p-sec--side .p-sec__line { height: 1pt; }
+
+/* ---------- 条目 ---------- */
+.p-item { margin-top: calc(var(--gap) * 0.62); }
+.p-item:first-child { margin-top: 0; }
+
+.p-item__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.p-item__main { flex: 1; min-width: 0; }
+.p-item__title {
+  margin: 0;
+  font-size: calc(var(--f-base) * 1.06);
+  font-weight: var(--fw-strong);
+  color: var(--ink);
+}
+.p-item__title .sep { color: var(--muted); font-weight: 400; margin: 0 5px; }
+.p-item__org { font-weight: var(--fw-strong); }
+.p-item__sub {
+  margin: 1px 0 0;
+  font-size: calc(var(--f-base) * 0.97);
+  color: var(--ink-3);
+}
+.p-item__date {
+  flex: 0 0 auto;
+  font-family: var(--f-en), var(--f-cn), sans-serif;
+  font-size: calc(var(--f-base) * 0.92);
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.p-item__date--below {
+  display: block;
+  margin-top: 1px;
+  flex: none;
+}
+.p-item__meta {
+  font-size: calc(var(--f-base) * 0.93);
+  color: var(--muted);
+  margin-top: 1px;
+}
+.p-item__tech { color: var(--accent); font-weight: 500; }
+
+/* ---------- 要点 ---------- */
+.p-bullets {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: pb;
+}
+.p-bullets li {
+  position: relative;
+  padding-left: 13px;
+  margin-top: 2.5px;
+  text-align: justify;
+  color: var(--ink-2);
+}
+.p-bullets li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: calc(var(--f-base) * 0.62);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.p-bullets--dash li::before {
+  border-radius: 0;
+  width: 6px;
+  height: 1.5pt;
+  top: calc(var(--f-base) * 0.82);
+}
+.p-bullets--num { counter-reset: pb; }
+.p-bullets--num li::before {
+  content: counter(pb) ".";
+  counter-increment: pb;
+  background: none;
+  width: auto; height: auto; top: 0;
+  color: var(--accent);
+  font-family: var(--f-en), var(--f-cn), sans-serif;
+  font-size: 0.92em;
+  font-weight: 700;
+}
+.p-bullets--plain li { padding-left: 0; }
+.p-bullets--plain li::before { display: none; }
+
+.p-bullets strong { font-weight: var(--fw-strong); color: var(--ink); }
+.p-bullets em { font-style: italic; }
+.p-bullets code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.92em;
+  background: #f2efe9;
+  padding: 0 3px;
+  border-radius: 2px;
+  color: var(--accent);
+}
+
+/* ---------- 技能条 ---------- */
+.p-skill { margin-top: calc(var(--gap) * 0.42); }
+.p-skill:first-child { margin-top: 0; }
+.p-skill__label {
+  font-weight: var(--fw-strong);
+  color: var(--ink);
+  font-size: calc(var(--f-base) * 0.99);
+}
+.p-skill__label::after { content: " ·"; color: var(--accent); }
+.p-skill__items { display: inline; color: var(--ink-2); }
+.p-skill__bar {
+  margin-top: 4px;
+  height: 3.5pt;
+  background: #eceae4;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.p-skill__bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.p-skill--tags .p-skill__items { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.p-skill--tags .p-tag {
+  font-size: calc(var(--f-base) * 0.9);
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 0.6pt solid color-mix(in srgb, var(--accent) 26%, transparent);
+  white-space: nowrap;
+}
+
+/* ---------- 其它自定义块 ---------- */
+.p-text { margin: 0; color: var(--ink-2); text-align: justify; }
+.p-links { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 5px; font-size: calc(var(--f-base) * 0.92); }
+.p-links a { color: var(--accent); text-decoration: none; word-break: break-all; }
+.p-honor { display: flex; align-items: baseline; gap: 10px; }
+.p-honor__t { flex: 1; font-weight: var(--fw-strong); }
+.p-honor__d { color: var(--muted); font-size: calc(var(--f-base) * 0.92); white-space: nowrap; }
+
+/* ---------- 开关类 ---------- */
+.p.no-icon .p-sec__icon { display: none; }
+.p.no-rule .p-sec__line { display: none; }
+.p.no-bullets .p-bullets li { padding-left: 0; }
+.p.no-bullets .p-bullets li::before { display: none; }
+.p.no-photo .p-head__aside { display: none; }
+.p.ats .p-sec__icon,
+.p.ats .p-sec__en { display: none; }
+.p.ats .p-bullets li::before { background: var(--ink-3); border-radius: 0; width: 5px; height: 1pt; }
+
+/* ==========================================================================
+   模板 · classic —— 致敬 billryan / hijiangtao 的 LaTeX 优雅单栏
+   特征：居中姓名 + 细分隔线、章节标题居左带下划线、日期右对齐
+   ========================================================================== */
+.paper[data-tpl="classic"] .p-sec__title { color: var(--ink); }
+.paper[data-tpl="classic"] .p-sec__line { background: var(--hair); height: 0.8pt; }
+.paper[data-tpl="classic"] .p-head { text-align: center; }
+.paper[data-tpl="classic"] .p-head__row { justify-content: center; }
+.paper[data-tpl="classic"] .p-head__aside { display: none; }
+.paper[data-tpl="classic"] .p-contact {
+  justify-content: center;
+  align-items: center;
+  gap: 2px 16px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 0.6pt solid var(--hair);
+  max-width: 78%;
+  margin-left: auto;
+  margin-right: auto;
+}
+.paper[data-tpl="classic"] .p-sec__en { font-style: italic; text-transform: none; letter-spacing: 0.02em; }
+.paper[data-tpl="classic"] .p-sec__title { font-family: var(--f-en), var(--f-cn), serif; letter-spacing: 0.02em; }
+
+/* ==========================================================================
+   模板 · curve —— 致敬 OpenCurVe Resume
+   特征：左 74% 主体 + 右 26% 头像位、章节标题主色加粗 + 粗横线、
+        公司 Banner（左侧品牌色竖条 + 浅色底 + 圆角）
+   ========================================================================== */
+.paper[data-tpl="curve"] .p-name { color: var(--accent); }
+.paper[data-tpl="curve"] .p-sec__line { height: 2pt; opacity: 1; }
+.paper[data-tpl="curve"] .p-sec__head { gap: 9px; }
+
+.p-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: calc(var(--gap) * 0.62);
+  padding: 5px 10px 5px 9px;
+  border-radius: 3pt;
+  background: var(--accent-soft);
+  border-left: 3pt solid var(--accent);
+}
+.p-banner:first-child { margin-top: 0; }
+.p-banner__logo {
+  flex: 0 0 auto;
+  width: 15pt; height: 15pt;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.p-banner__name { flex: 1; font-weight: var(--fw-strong); font-size: calc(var(--f-base) * 1.04); color: var(--ink); }
+.p-banner__role { font-weight: var(--fw-strong); color: var(--ink-2); font-size: calc(var(--f-base) * 0.97); }
+.p-banner__date { font-size: calc(var(--f-base) * 0.9); color: var(--muted); white-space: nowrap; }
+
+/* ==========================================================================
+   模板 · sidebar —— 致敬 Deedy-Resume / Reactive-Resume 双栏
+   左侧深色侧栏（技能、联系方式、荣誉），右侧主栏（经历、项目）
+   ========================================================================== */
+.paper[data-tpl="sidebar"] {
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: 0;
+}
+.p-sb-body {
+  display: grid;
+  grid-template-columns: 62mm 1fr;
+  min-height: 297mm;
+}
+.paper[data-tpl="sidebar"].is-letter .p-sb-body { min-height: 279.4mm; }
+
+.p-sb-side {
+  padding: calc(var(--m) * 0.86) 6mm;
+  background: #f4f2ec;
+  border-right: 0.6pt solid var(--hair);
+}
+.p-sb-main { padding: var(--m) calc(var(--m) * 0.9); }
+
+.p-sb-side .p-sec + .p-sec {
+  margin-top: calc(var(--gap) * 0.95);
+  padding-top: calc(var(--gap) * 0.8);
+  border-top: 0.6pt solid var(--hair);
+}
+.p-sb-side .p-sec__title { font-size: calc(var(--fs-section) * 0.78); }
+.p-sb-side .p-sec__line { display: none; }
+.p-sb-side .p-sec__head { padding-bottom: 3px; border-bottom: 1.2pt solid var(--accent); }
+.p-sb-side .p-item { margin-top: calc(var(--gap) * 0.5); }
+.p-sb-side .p-name { font-size: calc(var(--fs-name) * 0.82); }
+.p-sb-side .p-contact {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: calc(var(--f-base) * 0.9);
+}
+.p-sb-side .p-head__row { display: block; }
+.p-sb-side .p-head__aside { display: none; }
+.p-sb-side .p-sec__en { display: none; }
+
+.p-sb-main .p-item:first-child { margin-top: 0; }
+
+/* ==========================================================================
+   模板 · minimal —— 极致留白单栏，纯排版无装饰
+   ========================================================================== */
+.paper[data-tpl="minimal"] { padding: calc(var(--m) * 1.15); }
+.paper[data-tpl="minimal"] .p-sec__title {
+  font-size: calc(var(--fs-section) * 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: var(--fw-strong);
+}
+.paper[data-tpl="minimal"] .p-sec__line,
+.paper[data-tpl="minimal"] .p-sec__icon { display: none; }
+.paper[data-tpl="minimal"] .p-sec__head { margin-bottom: calc(var(--gap) * 0.5); }
+.paper[data-tpl="minimal"] .p-item__title { font-weight: var(--fw-strong); }
+.paper[data-tpl="minimal"] .p-head__aside { display: none; }
+.paper[data-tpl="minimal"] .p-bullets li { text-align: left; }
+.paper[data-tpl="minimal"] .p-name { font-weight: var(--fw-strong); letter-spacing: 0.04em; }
+
+/* ==========================================================================
+   密度：把 --scale 应用到间距上，实现「一页塞下更多」
+   ========================================================================== */
+.paper { --gap-eff: calc(var(--gap) * var(--scale)); }
+.paper .p-sec { margin-top: var(--gap-eff); }
+.paper .p-item { margin-top: calc(var(--gap-eff) * 0.62); }
+.paper .p-bullets li { margin-top: calc(2.5px * var(--scale)); }
+.paper .p-skill { margin-top: calc(var(--gap-eff) * 0.42); }
+
+/* 紧凑模式：额外压缩 */
+.paper.compact { --scale: 0.74; --f-base: calc(var(--f-base-base, 10.5pt) * 0.95); }
+.paper.compact .p-bullets li { margin-top: 1px; }
+.paper.compact .p-item__head { line-height: 1.35; }

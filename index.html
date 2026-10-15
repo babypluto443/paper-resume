@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>纸样 Resume · 在线简历生成器</title>
+<link rel="stylesheet" href="styles/tokens.css?v=8">
+<link rel="stylesheet" href="styles/components.css?v=8">
+<link rel="stylesheet" href="styles/paper.css?v=8">
+</head>
+<body>
+<div class="atmosphere" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="app" id="app">
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">纸</span>
+      <span class="brand__text">
+        <strong>纸样 Resume</strong>
+        <em class="mono">本地生成 · 数据不出浏览器</em>
+      </span>
+    </div>
+
+    <nav class="topbar__nav" aria-label="主要操作">
+      <button class="btn" id="btnUndo" title="撤销 (⌘Z)" aria-label="撤销">↶</button>
+      <button class="btn" id="btnRedo" title="重做 (⇧⌘Z)" aria-label="重做">↷</button>
+    </nav>
+
+    <div class="topbar__actions">
+      <label class="btn btn--ghost" for="fileJson">导入 JSON</label>
+      <input type="file" id="fileJson" accept="application/json" hidden>
+      <button class="btn btn--ghost" id="btnExportMd">导出 Markdown</button>
+      <button class="btn btn--ghost" id="btnExportHtml">导出 HTML</button>
+      <button class="btn btn--ghost" id="btnSaveJson">保存 JSON</button>
+      <button class="btn btn--primary" id="btnPrint">导出 PDF / 打印</button>
+    </div>
+  </header>
+
+  <!-- ================= 主体三栏 ================= -->
+  <main class="workspace">
+
+    <!-- ---------- 左：样式面板 ---------- -->
+    <aside class="panel panel--style" id="stylePanel" aria-label="样式定制">
+      <div class="panel__head">
+        <h2 class="panel__title">样式定制</h2>
+        <button class="panel__collapse" id="btnCollapseStyle" aria-label="收起样式面板">‹</button>
+      </div>
+
+      <div class="panel__scroll">
+
+        <!-- 模板 -->
+        <section class="fgroup">
+          <h3 class="fgroup__title">模板版式</h3>
+          <div class="tpl-grid" id="tplGrid" role="radiogroup" aria-label="模板版式"></div>
+        </section>
+
+        <!-- 配色 -->
+        <section class="fgroup">
+          <h3 class="fgroup__title">配色主题</h3>
+          <div class="swatch-row" id="themeRow" role="radiogroup" aria-label="配色主题"></div>
+          <div class="field field--inline">
+            <label for="cAccent">自定义主色</label>
+            <input type="color" id="cAccent" value="#173a86">
+          </div>
+        </section>
+
+        <!-- 字体 -->
+        <section class="fgroup">
+          <h3 class="fgroup__title">字体</h3>
+          <div class="field">
+            <label for="selFontCn">中文字体</label>
+            <select id="selFontCn"></select>
+          </div>
+          <div class="field">
+            <label for="selFontEn">西文字体</label>
+            <select id="selFontEn"></select>
+          </div>
+          <div class="field">
+            <label for="selWeight">字重</label>
+            <select id="selWeight">
+              <option value="400">常规 400</option>
+              <option value="500">中等 500</option>
+              <option value="600">半粗 600</option>
+              <option value="700">加粗 700</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- 字号与行距 -->
+        <section class="fgroup">
+          <h3 class="fgroup__title">字号与行距</h3>
+          <div class="field">
+            <label for="rBase">正文字号 <output id="oBase" class="mono">10pt</output></label>
+            <input type="range" id="rBase" min="8" max="14" step="0.5" value="10">
+          </div>
+          <div class="field">
+            <label for="rLine">行距 <output id="oLine" class="mono">1.38</output></label>
+            <input type="range" id="rLine" min="1.1" max="2" step="0.05" value="1.38">
+          </div>
+          <div class="field">
+            <label for="rName">姓名字号 <output id="oName" class="mono">25pt</output></label>
+            <input type="range" id="rName" min="18" max="40" step="1" value="25">
+          </div>
+          <div class="field">
+            <label for="rSection">章节标题字号 <output id="oSection" class="mono">12.5pt</output></label>
+            <input type="range" id="rSection" min="10" max="20" step="0.5" value="12.5">
+          </div>
+        </section>
+
+        <!-- 版式 -->
+        <section class="fgroup">
+          <h3 class="fgroup__title">版式与间距</h3>
+          <div class="field">
+            <label for="selPaper">纸张</label>
+            <select id="selPaper">
+              <option value="A4">A4 (210 × 297 mm)</option>
+              <option value="Letter">US Letter (8.5 × 11 in)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="rMargin">页边距 <output id="oMargin" class="mono">13mm</output></label>
+            <input type="range" id="rMargin" min="6" max="28" step="1" value="13">
+          </div>
+          <div class="field">
+            <label for="rGap">模块间距 <output id="oGap" class="mono">9pt</output></label>
+            <input type="range" id="rGap" min="4" max="28" step="1" value="9">
+          </div>
+          <div class="field">
+            <label for="rDense">内容密度 <output id="oDense" class="mono">100%</output></label>
+            <input type="range" id="rDense" min="70" max="140" step="5" value="100">
+          </div>
+          <div class="field">
+            <label for="selAlign">姓名区对齐</label>
+            <select id="selAlign">
+              <option value="left">居左</option>
+              <option value="center">居中</option>
+              <option value="split">左右分栏</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- 开关 -->
+        <section class="fgroup">
+          <h3 class="fgroup__title">细节开关</h3>
+          <label class="switch"><input type="checkbox" id="ckPhoto" checked><span>显示照片位</span></label>
+          <label class="switch"><input type="checkbox" id="ckIcon" checked><span>章节标题带图标</span></label>
+          <label class="switch"><input type="checkbox" id="ckRule" checked><span>章节标题下划线</span></label>
+          <div class="field" style="margin-top:6px">
+            <label for="selBullets">项目符号样式</label>
+            <select id="selBullets">
+              <option value="dot">圆点项目符号</option>
+              <option value="dash">短横线符号</option>
+              <option value="num">数字编号</option>
+              <option value="plain">无符号（ATS 最安全）</option>
+            </select>
+          </div>
+          <label class="switch"><input type="checkbox" id="ckDateRight" checked><span>日期右对齐</span></label>
+          <label class="switch"><input type="checkbox" id="ckCompact"><span>紧凑模式（省纸）</span></label>
+          <label class="switch"><input type="checkbox" id="ckAts" checked><span>ATS 友好（避免图形化字符）</span></label>
+        </section>
+
+        <section class="fgroup">
+          <button class="btn btn--ghost btn--block" id="btnResetStyle">恢复默认样式</button>
+        </section>
+
+      </div>
+    </aside>
+
+    <!-- ---------- 中：内容编辑器 ---------- -->
+    <section class="panel panel--editor" aria-label="内容编辑">
+      <div class="panel__head">
+        <h2 class="panel__title">内容编辑</h2>
+        <div class="panel__head-tools">
+          <span class="chip chip--quiet mono" id="pageCount">1 页</span>
+          <button class="btn btn--tiny" id="btnToggleAts" aria-pressed="false">ATS 文本视图</button>
+        </div>
+      </div>
+      <div class="panel__scroll" id="editorScroll">
+        <div id="editorRoot"></div>
+      </div>
+    </section>
+
+    <!-- ---------- 右：实时预览 ---------- -->
+    <section class="panel panel--preview" aria-label="实时预览">
+      <div class="panel__head">
+        <h2 class="panel__title">实时预览</h2>
+        <div class="panel__head-tools">
+          <label class="zoom">
+            <span class="zoom__label mono" id="zoomLabel">适应</span>
+            <input type="range" id="rZoom" min="30" max="140" step="5" value="70">
+          </label>
+          <button class="btn btn--tiny" id="btnAtsWrap" aria-pressed="false">双栏视图</button>
+        </div>
+      </div>
+      <div class="panel__scroll panel__scroll--paper" id="previewScroll">
+        <div class="paper-stage" id="paperStage"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 移动端 / 窄屏切换条 -->
+  <nav class="mobilebar" aria-label="面板切换">
+    <button class="mobilebar__btn is-active" data-pane="editor">内容</button>
+    <button class="mobilebar__btn" data-pane="style">样式</button>
+    <button class="mobilebar__btn" data-pane="preview">预览</button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script src="scripts/schema.js?v=8"></script>
+<script src="scripts/store.js?v=8"></script>
+<script src="scripts/render.js?v=8"></script>
+<script src="scripts/editor.js?v=8"></script>
+<script src="scripts/stylepanel.js?v=8"></script>
+<script src="scripts/exporters.js?v=8"></script>
+<script src="scripts/main.js?v=8"></script>
+</body>
+</html>

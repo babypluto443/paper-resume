@@ -1,0 +1,141 @@
+/* ==========================================================================
+   纸样 Resume · 设计令牌与基础层
+   风格方向：工业实用（Industrial / Utilitarian）——排字工房的克制感
+   界面主色：暖纸白 + 墨黑；唯一强调色：朱砂红（仅用于关键动作）
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,600&display=swap');
+
+:root {
+  /* 语义层：界面 */
+  --ui-bg: #100f0d;
+  --ui-surface: #191713;
+  --ui-surface-2: #221f1a;
+  --ui-surface-3: #2b2721;
+  --ui-line: #38332b;
+  --ui-line-soft: #2a2620;
+  --ui-text: #f2ece1;
+  --ui-text-dim: #b3a996;
+  --ui-text-faint: #7d7566;
+  --ui-accent: #d94f2b;
+  --ui-accent-soft: rgba(217, 79, 43, 0.14);
+  --ui-accent-ink: #ff7a52;
+  --ui-ok: #4c9a6a;
+
+  /* 纸张 */
+  --paper: #fdfbf6;
+
+  /* 字阶（界面） */
+  --ff-display: 'Archivo', 'Noto Sans SC', sans-serif;
+  --ff-ui: 'Noto Sans SC', 'Archivo', sans-serif;
+  --ff-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --ff-serif: 'Noto Serif SC', 'Playfair Display', serif;
+
+  --fs-xs: 11px;
+  --fs-sm: 12.5px;
+  --fs-md: 14px;
+  --fs-lg: 17px;
+  --fs-xl: 22px;
+  --fs-display: 30px;
+
+  /* 间距梯度 */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 34px;
+  --sp-7: 52px;
+
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 14px;
+
+  --sh-1: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --sh-2: 0 10px 30px rgba(0, 0, 0, 0.42);
+  --sh-3: 0 26px 70px rgba(0, 0, 0, 0.55);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-base: 320ms;
+  --dur-slow: 620ms;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: var(--ff-ui);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* 氛围层：暖光径向 + 颗粒噪声，给深色界面制造纸面质感 */
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(48rem 34rem at 6% -8%, rgba(217, 79, 43, 0.16), transparent 62%),
+    radial-gradient(42rem 32rem at 104% 4%, rgba(120, 140, 190, 0.1), transparent 58%);
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- 焦点可见性：全局统一描边 ---------- */
+:focus-visible {
+  outline: 2px solid var(--ui-accent-ink);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--ui-surface-3);
+  border: 3px solid var(--ui-bg);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: #443d33; }
+
+.mono { font-family: var(--ff-mono); font-variant-numeric: tabular-nums; }
+
+/* ---------- 入场编排：一次错峰序列，而非零散微交互 ---------- */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    animation: riseIn var(--dur-slow) var(--ease-out) forwards;
+  }
+  .reveal:nth-child(1) { animation-delay: 0ms; }
+  .reveal:nth-child(2) { animation-delay: 80ms; }
+  .reveal:nth-child(3) { animation-delay: 160ms; }
+  .reveal:nth-child(4) { animation-delay: 240ms; }
+  .reveal:nth-child(5) { animation-delay: 320ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; animation: none; }
+  * { transition-duration: 0.01ms !important; }
+}
