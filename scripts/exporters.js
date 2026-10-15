@@ -119,10 +119,19 @@ body { background:#e9e4da; margin:0; padding:28px 0; display:flex; justify-conte
   font-family:'Noto Sans SC',sans-serif; }
 .paper { box-shadow:0 4px 22px rgba(0,0,0,.16); margin:0 0 24px; }
 @media print {
-  body { background:#fff; padding:0; }
-  .paper { box-shadow:none; margin:0; break-after:page; page-break-after:always; }
+  /* @page margin 固定 0：版心边距已由 .paper 的 padding 负责。
+     若这里再叠一层用户边距，满高的 .paper 装不下被二次压缩的可打印区，
+     末尾就会多出空白页（用户反馈的"多一页"）。 */
+  html, body { background:#fff; margin:0 !important; padding:0 !important; }
+  .paper {
+    box-shadow:none !important;
+    margin:0 auto !important;
+    padding:var(--m) !important;
+    break-after:page; page-break-after:always;
+    break-inside:avoid; overflow:visible;
+  }
   .paper:last-child { break-after:auto; page-break-after:auto; }
-  @page { size:${st.paper === 'Letter' ? 'letter' : 'A4'}; margin:${st.margin}mm; }
+  @page { size:${st.paper === 'Letter' ? 'letter' : 'A4'}; margin:0; }
 }
 </style>
 </head>
@@ -150,19 +159,36 @@ ${body}
 
   /* ---------------- 打印 / PDF ---------------- */
   function print() {
-    // 打印前把缩放归零，由 @page 控制真实尺寸
+    /*
+      打印前必须把「预览态」清干净，否则会多出一页空白。
+
+      预览区为了在屏幕上缩放适配，写了两个内联样式：
+        transform: scale(s)             缩放
+        margin-bottom: -(1-s)*height   负边距补偿占位
+      内联样式无法被 @media print 里的 CSS 覆盖（除非加 !important），
+      于是这两条会被带进打印：
+        · scale 使纸张被视觉缩放，与 @page 的真实尺寸冲突
+        · 负 margin-bottom 抽掉了纸张应有的占位高度，
+          后续分页计算基于被压缩后的高度，末尾溢出成第二页
+
+      所以这里在打印前统一复位，打印后再恢复用户原本的缩放。
+    */
     document.body.classList.add('is-printing');
+    Preview.beginPrint();
     const prevZoom = document.getElementById('rZoom').value;
     document.getElementById('rZoom').value = '100';
     Preview.setZoom(100, true);
+
     const done = () => {
       document.body.classList.remove('is-printing');
       document.getElementById('rZoom').value = prevZoom;
-      Preview.applyZoom();
+      Preview.endPrint();
       window.removeEventListener('afterprint', done);
     };
     window.addEventListener('afterprint', done);
-    setTimeout(() => window.print(), 60);
+    // 部分浏览器不触发 afterprint，兜底在窗口重新获得焦点时复位
+    window.addEventListener('focus', () => setTimeout(done, 400), { once: true });
+    setTimeout(() => window.print(), 80);
   }
 
   /* ---------------- ATS 纯文本视图 ---------------- */

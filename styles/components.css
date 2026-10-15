@@ -645,17 +645,51 @@ input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
 
 /* ---------------- 打印：只输出纸张 ---------------- */
 @media print {
+  /* @page margin 必须是 0。
+     版心边距由 .paper 的 padding 独占（对应界面「页边距」滑块）。
+     若这里再给 @page 加 margin，内容会被二次压缩进更小的区域，
+     满高的 .paper（297mm）装不下 271mm 的可打印区，末尾就多出空白页。 */
   @page { size: A4; margin: 0; }
-  body { background: #fff; overflow: visible; }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff;
+    overflow: visible;
+  }
+
   .atmosphere, .grain, .topbar, .panel--style, .panel--editor,
   .panel__head, .mobilebar, .toast, .paper-badge, .panel-toggle,
   #measureHost, [data-measure] { display: none !important; }
+
   .app { height: auto; display: block; }
   .workspace { display: block; }
   .panel { display: none; }
   .panel--preview { display: block; border: none; background: #fff; }
   .panel__scroll--paper { overflow: visible; padding: 0; background: #fff; }
-  .paper-stage { gap: 0; transform: none !important; }
-  .paper-wrap { break-after: page; page-break-after: always; }
+
+  /* 预览舞台：这里必须用 !important。
+     缩放靠 transform + 负 margin-bottom 补偿占位，两者都是 JS 写的内联样式，
+     而内联优先级高于普通 @media print 规则，不用 !important 盖不住。
+     若负边距被带进打印，纸张占位高度被抽掉，分页计算失准，末尾就多出空白页。 */
+  .paper-stage {
+    gap: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* .paper 已是精确 A4 尺寸，此处不能再叠 box-shadow 等撑高元素 */
+  .paper {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: var(--m) !important;
+    overflow: visible;
+  }
+  .paper-wrap {
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+  }
   .paper-wrap:last-child { break-after: auto; page-break-after: auto; }
 }

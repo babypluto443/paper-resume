@@ -19,6 +19,7 @@ const Toast = (() => {
 const Preview = (() => {
   let stage = null, scroll = null;
   let zoom = 70;          // 百分比
+  let printing = false;   // 打印中：屏蔽缩放相关的内联样式
   let atsMode = false;    // ATS 纯文本视图
   let twoUp = false;      // 双栏并排
   let lastPages = 1;
@@ -31,6 +32,16 @@ const Preview = (() => {
   function applyZoom() {
     if (!stage) return;
     const s = zoom / 100;
+    // 打印前把缩放相关样式清干净。
+    // 缩放靠 transform + 一个负 margin-bottom 补偿占位，两者都是内联样式，
+    // @media print 里的规则盖不住内联（除非 !important）。
+    // 若带着负边距去打印，纸张高度会算错、末尾溢出成空白第二页。
+    // 这里提前清零，由 print() 负责恢复。
+    if (printing) {
+      stage.style.transform = '';
+      stage.style.marginBottom = '';
+      return;
+    }
     stage.style.transform = s < 1 ? `scale(${s})` : '';
     stage.style.marginBottom = s < 1 ? `-${Math.round((1 - s) * stage.offsetHeight)}px` : '';
     stage.style.transformOrigin = 'top center';
@@ -125,8 +136,12 @@ const Preview = (() => {
     setTimeout(fit, 10);
   }
 
+  /** 供 Exporters.print() 调用：打印期间屏蔽缩放内联样式 */
+  function beginPrint() { printing = true; applyZoom(); }
+  function endPrint() { printing = false; applyZoom(); }
+
   return { init, paint, fit, setZoom, applyZoom, toggleAts, toggleTwoUp,
-    get pages() { return lastPages; } };
+    beginPrint, endPrint, get pages() { return lastPages; } };
 })();
 
 /* ---------------- 全局装配 ---------------- */
@@ -208,7 +223,17 @@ const Preview = (() => {
   window.addEventListener('beforeunload', () => Store.saveNow());
   window.addEventListener('resize', () => { clearTimeout(window._rz); window._rz = setTimeout(() => Preview.fit(), 180); });
 
-  /* 打印前把 @page 尺寸写对 */
+  /* 打印页尺寸：@page 的 margin 必须为 0
+     ---------------------------------------------------------------
+     边距只能由一处负责。早先这里写的是 `margin: ${Store.style.margin}mm`，
+     与 components.css 里的 `@page { margin: 0 }` 冲突且后注入者胜出，
+     于是外层 @page 又缩进 13mm，而 .paper 本身是满高 297mm（A4），
+     实际可打印区域只剩 297-13×2=271mm → 必然溢出成空白第二页。
+
+     职责划分：
+     · @page 负责纸张尺寸与零外边距（不能有边距，否则内容被二次压缩）
+     · .paper 的 padding 负责版心边距（也就是界面上的「页边距」滑块）
+     这样屏幕上看到的排版与打印结果严格一致。 */
   const syncPageSize = () => {
     let tag = document.getElementById('pageSizeTag');
     if (!tag) {
@@ -216,7 +241,13 @@ const Preview = (() => {
       tag.id = 'pageSizeTag';
       document.head.appendChild(tag);
     }
-    tag.textContent = `@media print { @page { size: ${Store.style.paper === 'Letter' ? 'letter' : 'A4'}; margin: ${Store.style.margin}mm; } }`;
+    const size = Store.style.paper === 'Letter' ? 'letter' : 'A4';
+    // margin 固定 0；额外禁止浏览器默认注入页眉页脚，
+    // 否则 Chrome 会在页面顶部/底部加日期与网址，正是用户看到的"水印"
+    tag.textContent = `@media print {
+  @page { size: ${size}; margin: 0; }
+  html, body { margin: 0 !important; padding: 0 !important; }
+}`;
   };
   Store.subscribe(syncPageSize);
   syncPageSize();
