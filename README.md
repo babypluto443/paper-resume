@@ -1,16 +1,21 @@
 # 纸样 Resume · 在线简历生成器
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![零依赖](https://img.shields.io/badge/dependencies-0-808080?label=dependencies)](https://github.com/babypluto443/paper-resume)
+[![纯前端](https://img.shields.io/badge/backend-none-4F94C4?label=backend)](https://github.com/babypluto443/paper-resume)
+
 一个纯前端、零依赖、数据不出浏览器的在线简历生成器。左侧编辑、右侧 A4 实时预览，支持字体/字号/行距/页边距/配色等全量排版自定义，一键导出 PDF。
 
 ## 运行
 
 ```bash
-cd resume-builder
+git clone https://github.com/babypluto443/paper-resume.git
+cd paper-resume
 python3 -m http.server 8899
 # 打开 http://localhost:8899
 ```
 
-直接双击 `index.html` 也能打开（Google Fonts 需联网，其余完全离线）。
+直接双击 `index.html` 也能打开（Google Fonts 需联网，其余完全离线）。没有构建步骤，改完源码刷新即可。
 
 ## 从三个参考项目吸收了什么
 
@@ -90,7 +95,7 @@ python3 -m http.server 8899
 ## 文件结构
 
 ```
-resume-builder/
+paper-resume/
 ├── index.html              # 三栏骨架
 ├── styles/
 │   ├── tokens.css          # 设计令牌（界面配色、字阶、间距、动效）
@@ -106,7 +111,23 @@ resume-builder/
     └── main.js             # 预览控制器与全局装配
 ```
 
+## 开发提示
+
+分页依赖真实渲染高度，如果改动影响排版，务必在浏览器里确认：
+
+1. 页数徽标是否合理（单页绿 / 多页黄）
+2. 切换四种模板后是否都能正常分页
+3. `#measureHost` 里不应残留任何 `.p-sec`（离屏测量容器测完会清空，
+   若你改动了 `render.js` 的 `measure()`，注意保留 `ruler.innerHTML = ''`）
+
+新增排版维度：改 `schema.js` 的 `DEFAULT_STYLE` 加字段，
+`stylepanel.js` 加控件，`paper.css` 用新变量消费，三处各一行即可。
+
 ## 隐私
 
 没有任何后端。数据只存在浏览器 localStorage，导出的文件在你自己的磁盘上。
 清浏览器数据会丢简历，重要版本建议用「保存 JSON」留档。
+
+## License
+
+MIT
