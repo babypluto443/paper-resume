@@ -96,12 +96,26 @@ function renderHead(doc, st) {
 
 /* ---------------- 章节壳 ---------------- */
 function sectionShell(sec, st, inner) {
-  const showIcon = st.icon && !st.ats && has(sec.icon);
+  const meta = SECTION_TYPES[sec.type] || {};
+  // 章节前缀用「中文语义缩写」（学历/经历/项目…），不用 emoji：
+  // emoji 在 PDF 里常被渲染成彩色错字，字宽也不可控，还可能被 ATS 读成乱码
+  const title = sec.title || meta.label || '';
+  // 标记只在「与标题语义不重叠」时显示，避免出现"学历教育经历"这种重复。
+  // 判定用去重关键词而非缩写本身：标题写"教育经历"、缩写是"学历"，
+  // 字符串并不相交，但语义上却是同一个东西。
+  const raw = sec.abbr || meta.abbr || '';
+  const DUP = {
+    '学历': '教育', '经历': '经历', '项目': '项目', '技能': '技能',
+    '荣誉': '荣誉', '自述': '评价', '链接': '链接'
+  };
+  const key = DUP[raw] || raw;
+  const mark = raw && !title.includes(key) ? raw : '';
+  const showMark = st.icon && !st.ats && has(mark);
   const showRule = st.rule && !st.ats;
   return `
   <section class="p-sec" data-sec="${esc(sec.id)}">
     <div class="p-sec__head">
-      <h2 class="p-sec__title">${showIcon ? `<span class="p-sec__icon" aria-hidden="true">${sec.icon}</span>` : ''}${esc(sec.title || SECTION_TYPES[sec.type].label)}</h2>
+      <h2 class="p-sec__title">${showMark ? `<span class="p-sec__mark">${esc(mark)}</span>` : ''}${esc(title)}</h2>
       ${showRule ? '<i class="p-sec__line"></i>' : ''}
       ${has(sec.en) && !st.ats ? `<span class="p-sec__en">${esc(sec.en)}</span>` : ''}
     </div>

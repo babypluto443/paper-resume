@@ -70,7 +70,7 @@ const Exporters = (() => {
       const items = (sec.items || []).filter(it => it);
       if (!items.length) return;
       L.push('');
-      L.push(`## ${sec.icon || ''} ${sec.title || meta.label}`.trim());
+      L.push(`## ${sec.title || meta.label}`);
 
       items.forEach(it => {
         const line = [nz(it.org), nz(it.title)].filter(Boolean).join(' · ');

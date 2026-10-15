@@ -89,10 +89,56 @@
 
 /* ---------------- 工作区三栏 ---------------- */
 .workspace {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
   grid-template-columns: 268px minmax(340px, 0.92fr) minmax(380px, 1.08fr);
+}
+
+/* 样式面板收起：左侧列宽归零，剩余两栏重排 */
+.workspace.is-style-hidden {
+  grid-template-columns: 0 minmax(340px, 1fr) minmax(380px, 1.05fr);
+}
+
+/* 开合按钮：绝对定位在左边缘外侧，垂直居中。
+   独立于面板 DOM，面板隐藏后依然可见可点。 */
+.panel-toggle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  z-index: 40;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 22px;
+  padding: 14px 0;
+  border: 1px solid var(--ui-line);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--ui-surface-2);
+  color: var(--ui-text-dim);
+  cursor: pointer;
+  transition: background var(--dur-fast) ease-out, color var(--dur-fast) ease-out,
+              width var(--dur-base) var(--ease-out);
+}
+.panel-toggle:hover { background: var(--ui-surface-3); color: var(--ui-text); }
+.panel-toggle__chev {
+  font-size: 13px;
+  line-height: 1;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.workspace.is-style-hidden .panel-toggle { width: 26px; }
+.workspace.is-style-hidden .panel-toggle__chev { transform: rotate(180deg); }
+
+/* 竖排文字标签 */
+.panel-toggle__text {
+  writing-mode: vertical-rl;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.18em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .panel {
@@ -103,7 +149,15 @@
   border-right: 1px solid var(--ui-line);
 }
 .panel--preview { border-right: none; background: #0b0a09; }
-.panel--style.is-collapsed { display: none; }
+
+/* 收起时彻底移出布局流，避免残留边框 */
+.workspace.is-style-hidden .panel--style { display: none; }
+
+.panel__hint {
+  font-size: var(--fs-xs);
+  color: var(--ui-text-faint);
+  letter-spacing: 0.04em;
+}
 
 .panel__head {
   display: flex;
@@ -126,16 +180,6 @@
   color: var(--ui-text-dim);
 }
 .panel__head-tools { display: flex; align-items: center; gap: 8px; }
-.panel__collapse {
-  width: 26px; height: 26px;
-  border: 1px solid var(--ui-line);
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--ui-text-dim);
-  cursor: pointer;
-  transition: transform var(--dur-base) var(--ease-out);
-}
-.panel__collapse:hover { color: var(--ui-text); background: var(--ui-surface-2); }
 
 .panel__scroll { flex: 1 1 auto; overflow-y: auto; padding: var(--sp-4); }
 .panel__scroll--paper { padding: var(--sp-5) var(--sp-4) 80px; background:
@@ -444,11 +488,22 @@ input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
   font-size: var(--fs-xs);
   color: var(--ui-text);
 }
-.tag button {
-  border: none; background: none; color: var(--ui-text-faint);
-  cursor: pointer; font-size: 12px; line-height: 1; padding: 0 2px;
+/* 整块可点的 tag（用于「添加模块」） */
+.tag--btn {
+  border: 1px solid var(--ui-line);
+  background: var(--ui-surface-2);
+  color: var(--ui-text-dim);
+  font-family: var(--ff-ui);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  transition: background var(--dur-fast) ease-out, color var(--dur-fast) ease-out,
+              border-color var(--dur-fast) ease-out;
 }
-.tag button:hover { color: var(--ui-accent-ink); }
+.tag--btn:hover {
+  background: var(--ui-accent-soft);
+  border-color: var(--ui-accent);
+  color: var(--ui-accent-ink);
+}
 
 /* ---------------- 预览舞台 ---------------- */
 .paper-stage {
@@ -536,12 +591,28 @@ input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
 /* ---------------- 响应式：768 / 1440 ---------------- */
 @media (max-width: 1240px) {
   .workspace { grid-template-columns: 236px minmax(300px, 1fr) minmax(320px, 1fr); }
+  .workspace.is-style-hidden { grid-template-columns: 0 minmax(300px, 1fr) minmax(320px, 1fr); }
   .topbar { gap: var(--sp-3); }
   .btn { padding: 0 10px; }
 }
 
 @media (max-width: 1024px) {
   .workspace { grid-template-columns: 1fr; }
+  .workspace.is-style-hidden { grid-template-columns: 1fr; }
+  /* 窄屏样式面板是整屏显示，开合按钮改为顶部横条 */
+  .panel-toggle {
+    left: 0; top: 0;
+    transform: none;
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+    padding: 7px 0;
+    border-radius: 0;
+    border-width: 0 0 1px 0;
+  }
+  .panel-toggle__text { writing-mode: horizontal-tb; letter-spacing: 0.1em; }
+  .workspace.is-style-hidden .panel-toggle { width: 100%; }
   .panel { display: none; border-right: none; }
   .panel.is-active { display: flex; }
   .mobilebar {
@@ -577,7 +648,7 @@ input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
   @page { size: A4; margin: 0; }
   body { background: #fff; overflow: visible; }
   .atmosphere, .grain, .topbar, .panel--style, .panel--editor,
-  .panel__head, .mobilebar, .toast, .paper-badge,
+  .panel__head, .mobilebar, .toast, .paper-badge, .panel-toggle,
   #measureHost, [data-measure] { display: none !important; }
   .app { height: auto; display: block; }
   .workspace { display: block; }

@@ -142,7 +142,10 @@ const Preview = (() => {
   Preview.paint();
   requestAnimationFrame(() => Preview.fit());
 
-  /* 订阅：内容变更 → 重绘预览 + 局部刷新摘要；样式变更 → 重绘预览 + 同步控件 */
+  /* 订阅：内容变更 → 重绘预览
+     Editor.render() 内部会判断是否处于输入态：
+     输入过程中（reason==='typing'）只重绘预览，不重建编辑器 DOM，
+     否则正在输入的 input 会被销毁导致失焦、打不了字 */
   Store.subscribe(reason => {
     if (reason === 'style') {
       Preview.paint();

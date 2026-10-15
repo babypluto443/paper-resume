@@ -231,10 +231,35 @@ const StylePanel = (() => {
       Toast.show('样式已恢复默认');
     });
 
-    // 折叠面板
-    const panel = document.getElementById('stylePanel');
-    document.getElementById('btnCollapseStyle').addEventListener('click', () => {
-      panel.classList.toggle('is-collapsed');
+    bindPanelToggle();
+  }
+
+  /* ---------------- 样式面板开合 ----------------
+     按钮是 .workspace 的子元素而非面板子元素，
+     所以面板隐藏后按钮依然可点，能再次拉出（bug 修复）。 */
+  function bindPanelToggle() {
+    const ws = document.getElementById('workspace');
+    const btn = document.getElementById('btnToggleStyle');
+    if (!ws || !btn) return;
+
+    btn.addEventListener('click', () => {
+      const hidden = ws.classList.toggle('is-style-hidden');
+      btn.setAttribute('aria-expanded', String(!hidden));
+      btn.title = hidden ? '展开样式面板' : '收起样式面板';
+      // 面板显隐会改变预览可用宽度，需要重算缩放
+      setTimeout(() => Preview.fit(), 340);
+    });
+
+    // 窄屏下切换面板时若样式栏被隐藏，需要同时恢复可见性，
+    // 否则切回「样式」标签会看到空白
+    const originalPaneSwitch = () => {
+      if (window.innerWidth <= 1024 && ws.classList.contains('is-style-hidden')) {
+        ws.classList.remove('is-style-hidden');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    };
+    document.querySelectorAll('.mobilebar__btn').forEach(b => {
+      b.addEventListener('click', originalPaneSwitch);
     });
   }
 

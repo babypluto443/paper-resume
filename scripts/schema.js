@@ -75,7 +75,7 @@ const DEFAULT_BULLET_STYLE = 'dot';
    side: 是否默认进侧栏（sidebar 模板生效）
 ------------------------------------------------------------------- */
 const SECTION_TYPES = {
-  education: { label: '教育经历', icon: '🎓', side: false, kind: 'education',
+  education: { label: '教育经历', abbr: '学历', side: false, kind: 'education',
     fields: [
       { k: 'org', label: '学校 / 机构', w: 'full', req: true, ph: '某某大学' },
       { k: 'title', label: '专业 / 学位', w: 'full', ph: '计算机科学与技术 · 工学学士' },
@@ -83,7 +83,7 @@ const SECTION_TYPES = {
       { k: 'meta', label: '补充（GPA / 排名 / 荣誉）', w: 'full', ph: 'GPA 3.8/4.0 · 专业前 5%' },
       { k: 'bullets', label: '要点（每行一条）', w: 'full', type: 'bullets' }
     ] },
-  experience: { label: '实习 / 工作经历', icon: '💼', side: false, kind: 'experience',
+  experience: { label: '实习 / 工作经历', abbr: '经历', side: false, kind: 'experience',
     fields: [
       { k: 'org', label: '公司 / 团队', w: 'full', req: true, ph: '某某科技有限公司' },
       { k: 'title', label: '职位', w: 'full', ph: '后端开发实习生' },
@@ -91,7 +91,7 @@ const SECTION_TYPES = {
       { k: 'meta', label: '技术栈（用 / 分隔）', w: 'full', ph: 'Go / Gin / GORM / MySQL / Redis' },
       { k: 'bullets', label: '要点（每行一条，建议量化成果）', w: 'full', type: 'bullets' }
     ] },
-  project: { label: '项目经历', icon: '🛠', side: false, kind: 'project',
+  project: { label: '项目经历', abbr: '项目', side: false, kind: 'project',
     fields: [
       { k: 'title', label: '项目名称', w: 'full', req: true, ph: '类小红书 Feed 系统' },
       { k: 'org', label: '角色 / 归属', w: 'full', ph: '个人项目 · 负责后端全流程' },
@@ -100,24 +100,24 @@ const SECTION_TYPES = {
       { k: 'link', label: '链接（可选）', w: 'full', ph: 'https://github.com/xxx/yyy' },
       { k: 'bullets', label: '要点（每行一条）', w: 'full', type: 'bullets' }
     ] },
-  skill: { label: '专业技能', icon: '⚙️', side: true, kind: 'skill',
+  skill: { label: '专业技能', abbr: '技能', side: true, kind: 'skill',
     fields: [
       { k: 'title', label: '技能分类', w: 'full', req: true, ph: '后端语言' },
       { k: 'bullets', label: '具体条目（每行一条）', w: 'full', type: 'bullets' },
       { k: 'level', label: '熟练度条（0-100，留空则不显示；仅 sidebar 模板可见）', w: 'full', type: 'level' }
     ] },
-  honor: { label: '荣誉奖项', icon: '🏆', side: true, kind: 'honor',
+  honor: { label: '荣誉奖项', abbr: '荣誉', side: true, kind: 'honor',
     fields: [
       { k: 'title', label: '奖项名称', w: 'full', req: true, ph: '国家奖学金' },
       { k: 'org', label: '颁发方', w: 'full', ph: '教育部' },
       { k: 'date', label: '时间', w: 'full', ph: '2023.10' }
     ] },
-  text: { label: '自定义文本块', icon: '📝', side: false, kind: 'text',
+  text: { label: '自定义文本块', abbr: '自述', side: false, kind: 'text',
     fields: [
       { k: 'title', label: '块标题', w: 'full', ph: '自我评价' },
       { k: 'body', label: '正文（支持 **粗体** *斜体* `代码` [链接](url)）', w: 'full', type: 'textarea' }
     ] },
-  link: { label: '链接 / 作品集', icon: '🔗', side: true, kind: 'link',
+  link: { label: '链接 / 作品集', abbr: '链接', side: true, kind: 'link',
     fields: [
       { k: 'title', label: '标题', w: 'full', ph: 'GitHub' },
       { k: 'link', label: '地址', w: 'full', ph: 'https://github.com/xxx' },
@@ -144,7 +144,7 @@ function sampleDoc() {
     },
     sections: [
       {
-        id: 'sec_edu', type: 'education', title: '教育经历', en: 'Education', icon: '🎓', visible: true,
+        id: 'sec_edu', type: 'education', title: '教育经历', en: 'Education', abbr: '学历', visible: true,
         items: [
           { id: 'i1', org: '某某大学', title: '计算机科学与技术 · 工学学士', date: '2019.09 - 2023.06',
             meta: 'GPA 3.82/4.0（专业前 5%）· 校级一等奖学金 ×2',
@@ -152,7 +152,7 @@ function sampleDoc() {
         ]
       },
       {
-        id: 'sec_exp', type: 'experience', title: '实习经历', en: 'Experience', icon: '💼', visible: true,
+        id: 'sec_exp', type: 'experience', title: '实习经历', en: 'Experience', abbr: '经历', visible: true,
         items: [
           { id: 'i1', org: '某某科技有限公司', title: '后端开发实习生', date: '2024.07 - 2024.10',
             meta: 'Go / Gin / GORM / MySQL / Redis / RocketMQ',
@@ -164,7 +164,7 @@ function sampleDoc() {
         ]
       },
       {
-        id: 'sec_proj', type: 'project', title: '项目经历', en: 'Projects', icon: '🛠', visible: true,
+        id: 'sec_proj', type: 'project', title: '项目经历', en: 'Projects', abbr: '项目', visible: true,
         items: [
           { id: 'i1', title: '类小红书 Feed 系统（个人项目）', org: '独立开发 · 负责后端全流程', date: '2025.03 - 2025.08',
             meta: 'Go · Gin · GORM · MySQL 8.0 · Redis · Docker',
@@ -177,7 +177,7 @@ function sampleDoc() {
         ]
       },
       {
-        id: 'sec_skill', type: 'skill', title: '专业技能', en: 'Skills', icon: '⚙️', visible: true,
+        id: 'sec_skill', type: 'skill', title: '专业技能', en: 'Skills', abbr: '技能', visible: true,
         items: [
           { id: 'i1', title: '后端语言', level: 85, bullets: ['Go（主力，能读标准库源码）', 'Python（能写脚本与小服务）'] },
           { id: 'i2', title: '框架与存储', level: 80, bullets: ['Gin / GORM', 'MySQL（索引与事务优化）', 'Redis / RabbitMQ'] },
@@ -185,19 +185,19 @@ function sampleDoc() {
         ]
       },
       {
-        id: 'sec_honor', type: 'honor', title: '荣誉奖项', en: 'Honors', icon: '🏆', visible: true,
+        id: 'sec_honor', type: 'honor', title: '荣誉奖项', en: 'Honors', abbr: '荣誉', visible: true,
         items: [
           { id: 'i1', title: '国家励志奖学金', org: '教育部', date: '2022.10' }
         ]
       },
       {
-        id: 'sec_self', type: 'text', title: '自我评价', en: 'Summary', icon: '📝', visible: true,
+        id: 'sec_self', type: 'text', title: '自我评价', en: 'Summary', abbr: '自述', visible: true,
         items: [
           { id: 'i1', title: '', body: '写代码先想清楚再动手：习惯先用 `EXPLAIN` 验证索引假设，再用压测看真实数据，而不是凭感觉调优。对不确定的地方会先做最小可验证实验，验证完再往下推进。' }
         ]
       },
       {
-        id: 'sec_link', type: 'link', title: '作品集', en: 'Links', icon: '🔗', visible: false,
+        id: 'sec_link', type: 'link', title: '作品集', en: 'Links', abbr: '链接', visible: false,
         items: [
           { id: 'i1', title: 'GitHub', link: 'https://github.com/zhangsan', meta: '后端小项目集合' },
           { id: 'i2', title: '博客', link: 'https://zhangsan.dev', meta: '学习笔记' }

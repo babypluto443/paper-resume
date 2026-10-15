@@ -149,7 +149,20 @@
   letter-spacing: 0.03em;
   white-space: nowrap;
 }
-.p-sec__icon { font-size: calc(var(--fs-section) * 0.82); line-height: 1; color: var(--accent); }
+/* 章节前缀：中文语义缩写（学历/经历/项目…），比 emoji 更正式且打印安全 */
+.p-sec__mark {
+  flex: 0 0 auto;
+  margin-right: 7px;
+  padding: 0.5px 4px;
+  border: 0.7pt solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 1.5pt;
+  font-size: calc(var(--fs-section) * 0.6);
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  vertical-align: 1px;
+}
 .p-sec__line { flex: 1; height: 1.5pt; background: var(--accent); opacity: 0.9; }
 .p-sec__en {
   font-family: var(--f-en), var(--f-cn), sans-serif;
@@ -301,12 +314,12 @@
 .p-honor__d { color: var(--muted); font-size: calc(var(--f-base) * 0.92); white-space: nowrap; }
 
 /* ---------- 开关类 ---------- */
-.p.no-icon .p-sec__icon { display: none; }
+.p.no-icon .p-sec__mark { display: none; }
 .p.no-rule .p-sec__line { display: none; }
 .p.no-bullets .p-bullets li { padding-left: 0; }
 .p.no-bullets .p-bullets li::before { display: none; }
 .p.no-photo .p-head__aside { display: none; }
-.p.ats .p-sec__icon,
+.p.ats .p-sec__mark,
 .p.ats .p-sec__en { display: none; }
 .p.ats .p-bullets li::before { background: var(--ink-3); border-radius: 0; width: 5px; height: 1pt; }
 
@@ -425,7 +438,7 @@
   font-weight: var(--fw-strong);
 }
 .paper[data-tpl="minimal"] .p-sec__line,
-.paper[data-tpl="minimal"] .p-sec__icon { display: none; }
+.paper[data-tpl="minimal"] .p-sec__mark { display: none; }
 .paper[data-tpl="minimal"] .p-sec__head { margin-bottom: calc(var(--gap) * 0.5); }
 .paper[data-tpl="minimal"] .p-item__title { font-weight: var(--fw-strong); }
 .paper[data-tpl="minimal"] .p-head__aside { display: none; }

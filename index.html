@@ -40,13 +40,23 @@
   </header>
 
   <!-- ================= 主体三栏 ================= -->
-  <main class="workspace">
+  <main class="workspace" id="workspace">
+
+    <!-- ---------- 样式面板开合按钮 ----------
+         必须放在 .workspace 里、.panel--style 外面：
+         若按钮位于面板内部，面板 display:none 后按钮自身也消失，
+         用户收起后就再也拉不回来。 -->
+    <button class="panel-toggle" id="btnToggleStyle" aria-expanded="true"
+            aria-controls="stylePanel" title="收起 / 展开样式面板">
+      <span class="panel-toggle__chev" aria-hidden="true">‹</span>
+      <span class="panel-toggle__text">样式</span>
+    </button>
 
     <!-- ---------- 左：样式面板 ---------- -->
     <aside class="panel panel--style" id="stylePanel" aria-label="样式定制">
       <div class="panel__head">
         <h2 class="panel__title">样式定制</h2>
-        <button class="panel__collapse" id="btnCollapseStyle" aria-label="收起样式面板">‹</button>
+        <span class="panel__hint">调完实时生效</span>
       </div>
 
       <div class="panel__scroll">
@@ -146,7 +156,7 @@
         <section class="fgroup">
           <h3 class="fgroup__title">细节开关</h3>
           <label class="switch"><input type="checkbox" id="ckPhoto" checked><span>显示照片位</span></label>
-          <label class="switch"><input type="checkbox" id="ckIcon" checked><span>章节标题带图标</span></label>
+          <label class="switch"><input type="checkbox" id="ckIcon" checked><span>章节标题带类别标签</span></label>
           <label class="switch"><input type="checkbox" id="ckRule" checked><span>章节标题下划线</span></label>
           <div class="field" style="margin-top:6px">
             <label for="selBullets">项目符号样式</label>

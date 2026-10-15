@@ -8,6 +8,7 @@
 const Editor = (() => {
   let root = null;
   let openSet = new Set();
+  let editing = false;   // 输入过程中为 true，用于跳过编辑器自身重绘
 
   function init(el) { root = el; }
 
@@ -158,7 +159,7 @@ const Editor = (() => {
     return `
     <div class="ed-group" data-secwrap="${sec.id}">
       <div class="ed-group__head">
-        <h3 class="ed-group__title">${sec.icon || meta.icon} ${esc(sec.title)}</h3>
+        <h3 class="ed-group__title">${esc(sec.title)}</h3>
         <span class="chip chip--quiet mono">${items.length}</span>
         <span class="ed-group__spacer"></span>
         <button class="iconbtn" data-act="addItem" data-sec="${sec.id}" title="添加条目">＋</button>
@@ -174,6 +175,10 @@ const Editor = (() => {
   /* ---------------- 整页渲染 ---------------- */
   function render() {
     if (!root) return;
+    // 输入过程中绝不重建 DOM —— 那会销毁用户正在编辑的 input。
+    // 只做轻量的就地同步（摘要文字、条目计数），保证视觉一致。
+    if (editing) { refreshTitles(); return; }
+
     const doc = Store.doc;
     const secs = doc.sections || [];
     root.innerHTML =
@@ -190,9 +195,7 @@ const Editor = (() => {
     <div class="ed-group">
       <div class="ed-group__head"><h3 class="ed-group__title">＋ 添加模块</h3></div>
       <div class="tagline">
-        ${avail.map(t => `<span class="tag">${SECTION_TYPES[t].icon}
-          <button data-act="addSec" data-type="${t}" style="background:none;border:none;color:inherit;cursor:pointer;padding:0;font-size:12px">${SECTION_TYPES[t].label}</button>
-        </span>`).join('')}
+        ${avail.map(t => `<button class="tag tag--btn" data-act="addSec" data-type="${t}">${SECTION_TYPES[t].label}</button>`).join('')}
       </div>
     </div>`;
   }
@@ -231,7 +234,7 @@ const Editor = (() => {
       Store.commit(d => {
         d.sections.push({
           id: Store.uid('sec'), type, title: SECTION_TYPES[type].label,
-          en: '', icon: SECTION_TYPES[type].icon, visible: true, items: []
+          en: '', abbr: SECTION_TYPES[type].abbr, visible: true, items: []
         });
       }, 'editor');
       return;
@@ -299,20 +302,54 @@ const Editor = (() => {
     }
   }
 
+  /* ---------------------------------------------------------------------
+     输入处理（bug 修复：停顿后无法继续输入）
+
+     原实现每次输入都走 Store.commit → emit → Editor.render()，
+     而 render() 会 innerHTML 重建整个编辑器，正在输入的 <input>
+     因此被销毁 → 失焦 → 用户停顿一下就再也打不了字。
+
+     现在区分两种提交：
+     · 静默提交（输入过程）：立即写入数据，但**不重建编辑器 DOM**。
+       关键是「值要在事件发生的瞬间就取出来」，绝不能放进 setTimeout 里 ——
+       因为等待期间 DOM 可能已被重绘替换，闭包里的 el 会变成脱离文档的旧节点，
+       提交的就是过期值（曾导致刚输入的内容丢失）。
+     · 普通提交（增删条目、改模块等结构性操作）：才重建编辑器
+     --------------------------------------------------------------------- */
   function handleInput(e) {
     const el = e.target;
+    // 输入态标记：用于阻止本次输入引发的编辑器重绘
+    editing = true;
+
+    // 在事件发生的瞬间把值快照出来，再防抖提交。
+    // 为什么要快照而不是在 setTimeout 里读 el.value：
+    // 等待期间 DOM 可能已被重绘替换，虽然脱离文档的节点仍能读到 value，
+    // 但一旦期间发生过结构变更（删条目等），读到的就可能是废弃节点的旧值。
+    // 快照让提交内容与用户当时的输入严格一致。
+    // 同时把提交器挂在 el._pending 上：失焦时可绕过防抖立刻落盘，
+    // 避免「输入完马上点别处」时数据还没写入就被重绘覆盖。
+    const schedule = (val, mutator) => {
+      clearTimeout(el._t);
+      el._pending = mutator;
+      el._t = setTimeout(() => {
+        el._pending = null;
+        Store.commit(mutator, 'typing');
+      }, 240);
+    };
 
     // basics 字段
     if (el.dataset.bb) {
       const k = el.dataset.bb;
-      clearTimeout(el._t);
-      el._t = setTimeout(() => Store.commit(d => { d.basics[k] = el.value; }, 'editor'), 260);
+      const v = el.value;
+      schedule(v, d => { d.basics[k] = v; });
       return;
     }
     if (el.dataset.bk) {
       const i = +el.dataset.bi, k = el.dataset.bk;
-      clearTimeout(el._t);
-      el._t = setTimeout(() => Store.commit(d => { d.basics.contacts[i][k] = el.value; }, 'editor'), 260);
+      const v = el.value;
+      schedule(v, d => {
+        if (d.basics.contacts[i]) d.basics.contacts[i][k] = v;
+      });
       return;
     }
     // 章节条目字段
@@ -320,20 +357,24 @@ const Editor = (() => {
       const secId = el.dataset.sec, itemId = el.dataset.item, k = el.dataset.k;
       if (k.endsWith('__b')) {
         const arr = k.slice(0, -3), idx = +el.dataset.i;
-        clearTimeout(el._t);
-        el._t = setTimeout(() => Store.commit(d => {
+        const v = el.value;
+        schedule(v, d => {
           const it = findItem(findSec(secId), itemId);
-          it[arr][idx] = el.value;
-        }, 'editor'), 260);
+          if (it && it[arr]) it[arr][idx] = v;
+        });
       } else {
         const isRange = el.type === 'range';
         const out = el.closest('.ed-field')?.querySelector('output');
         if (out) out.textContent = (k === 'level') ? (el.value === '0' ? '不显示' : el.value) : el.value;
-        clearTimeout(el._t);
-        el._t = setTimeout(() => Store.commit(d => {
+        const v = el.value;
+        const mut = d => {
           const it = findItem(findSec(secId), itemId);
-          it[k] = isRange ? +el.value : el.value;
-        }, 'editor'), isRange ? 0 : 260);
+          if (it) it[k] = isRange ? +v : v;
+        };
+        clearTimeout(el._t);
+        el._pending = mut;
+        el._t = setTimeout(() => { el._pending = null; Store.commit(mut, 'typing'); },
+          isRange ? 0 : 240);
       }
     }
   }
@@ -374,7 +415,25 @@ const Editor = (() => {
       const t = e.target.closest('[data-act="toggleItem"]');
       if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(t.dataset.id); }
     });
+    // 失焦时立即落盘待提交内容。
+    // 关键：先同步数据，再谈 UI 重建；且重建要延后到下一宏任务，
+    // 否则 focusout（先于 click 触发）会把待点击的按钮替换掉，导致操作丢失。
+    root.addEventListener('focusout', e => {
+      const el = e.target;
+      // 把还挂在防抖队列里的值立刻写进数据
+      if (el._pending) {
+        try { Store.commit(el._pending, 'typing'); } catch (_) { /* 目标可能已删除 */ }
+        el._pending = null;
+      }
+      clearTimeout(el._t); el._t = null;
+      setTimeout(() => {
+        if (editing) { editing = false; render(); }
+      }, 0);
+    });
+    // 粘贴（含多行文本）走原生 paste，不做额外拦截
+    root.addEventListener('paste', () => { editing = true; });
   }
 
-  return { init, render, bind, refreshTitles, pickPhoto };
+  return { init, render, bind, refreshTitles, pickPhoto,
+    isEditing: () => editing };
 })();
