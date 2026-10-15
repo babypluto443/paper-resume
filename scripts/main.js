@@ -148,8 +148,9 @@ const Preview = (() => {
      否则正在输入的 input 会被销毁导致失焦、打不了字 */
   Store.subscribe(reason => {
     if (reason === 'style') {
-      Preview.paint();
-      StylePanel.syncControls();
+      // 走 onStyleChange：除了重绘预览，还要同步模板卡/色块的选中态。
+      // 原先只调 syncControls()，导致点了模板高亮不动。
+      StylePanel.onStyleChange();
       return;
     }
     Editor.render();

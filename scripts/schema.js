@@ -61,6 +61,7 @@ const DEFAULT_STYLE = {
   align: 'center',   // classic 固定居中，其余可选 left / center / split
   photo: true,
   icon: true,
+  smartMark: false,   // 类别标签与标题语义重叠时自动隐藏（默认关，见 render.js 说明）
   rule: true,
   bullets: 'dot',    // dot | dash | num | plain
   dateRight: true,
@@ -144,7 +145,7 @@ function sampleDoc() {
     },
     sections: [
       {
-        id: 'sec_edu', type: 'education', title: '教育经历', en: 'Education', abbr: '学历', visible: true,
+        id: 'sec_edu', type: 'education', title: '教育', en: 'Education', abbr: '学历', visible: true,
         items: [
           { id: 'i1', org: '某某大学', title: '计算机科学与技术 · 工学学士', date: '2019.09 - 2023.06',
             meta: 'GPA 3.82/4.0（专业前 5%）· 校级一等奖学金 ×2',
@@ -152,7 +153,7 @@ function sampleDoc() {
         ]
       },
       {
-        id: 'sec_exp', type: 'experience', title: '实习经历', en: 'Experience', abbr: '经历', visible: true,
+        id: 'sec_exp', type: 'experience', title: '实习', en: 'Experience', abbr: '经历', visible: true,
         items: [
           { id: 'i1', org: '某某科技有限公司', title: '后端开发实习生', date: '2024.07 - 2024.10',
             meta: 'Go / Gin / GORM / MySQL / Redis / RocketMQ',
@@ -164,7 +165,7 @@ function sampleDoc() {
         ]
       },
       {
-        id: 'sec_proj', type: 'project', title: '项目经历', en: 'Projects', abbr: '项目', visible: true,
+        id: 'sec_proj', type: 'project', title: '项目', en: 'Projects', abbr: '项目', visible: true,
         items: [
           { id: 'i1', title: '类小红书 Feed 系统（个人项目）', org: '独立开发 · 负责后端全流程', date: '2025.03 - 2025.08',
             meta: 'Go · Gin · GORM · MySQL 8.0 · Redis · Docker',
@@ -177,7 +178,7 @@ function sampleDoc() {
         ]
       },
       {
-        id: 'sec_skill', type: 'skill', title: '专业技能', en: 'Skills', abbr: '技能', visible: true,
+        id: 'sec_skill', type: 'skill', title: '技能', en: 'Skills', abbr: '技能', visible: true,
         items: [
           { id: 'i1', title: '后端语言', level: 85, bullets: ['Go（主力，能读标准库源码）', 'Python（能写脚本与小服务）'] },
           { id: 'i2', title: '框架与存储', level: 80, bullets: ['Gin / GORM', 'MySQL（索引与事务优化）', 'Redis / RabbitMQ'] },
@@ -185,13 +186,13 @@ function sampleDoc() {
         ]
       },
       {
-        id: 'sec_honor', type: 'honor', title: '荣誉奖项', en: 'Honors', abbr: '荣誉', visible: true,
+        id: 'sec_honor', type: 'honor', title: '荣誉', en: 'Honors', abbr: '荣誉', visible: true,
         items: [
           { id: 'i1', title: '国家励志奖学金', org: '教育部', date: '2022.10' }
         ]
       },
       {
-        id: 'sec_self', type: 'text', title: '自我评价', en: 'Summary', abbr: '自述', visible: true,
+        id: 'sec_self', type: 'text', title: '简介', en: 'Summary', abbr: '自述', visible: true,
         items: [
           { id: 'i1', title: '', body: '写代码先想清楚再动手：习惯先用 `EXPLAIN` 验证索引假设，再用压测看真实数据，而不是凭感觉调优。对不确定的地方会先做最小可验证实验，验证完再往下推进。' }
         ]

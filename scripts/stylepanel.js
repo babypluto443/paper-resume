@@ -114,6 +114,7 @@ const StylePanel = (() => {
     refs.photo.checked = !!st.photo;
     refs.icon.checked = !!st.icon;
     refs.rule.checked = !!st.rule;
+    if (refs.smartMark) refs.smartMark.checked = !!st.smartMark;
     refs.dateRight.checked = !!st.dateRight;
     refs.compact.checked = !!st.compact;
     refs.ats.checked = !!st.ats;
@@ -127,7 +128,26 @@ const StylePanel = (() => {
     refs.zoomLabel.textContent = zoomFit ? '适应' : refs.zoom.value + '%';
   }
 
-  /* ---------------- 预览刷新 ---------------- */
+  /* ---------------- 选中态同步（不重建 DOM，避免打断正在操作的控件） ----------------
+     早期 bug：样式变更后只调 syncControls()，而它不负责模板卡与色块的
+     is-active 类，导致点完模板/配色后高亮仍停在旧的那一项 ——
+     数据变了、预览变了，只有选中态没变。
+     这里只切 class，不重建 innerHTML。 */
+  function syncSelection() {
+    const st = Store.style;
+    document.querySelectorAll('.tpl-card').forEach(card => {
+      const on = card.dataset.tpl === st.template;
+      card.classList.toggle('is-active', on);
+      card.setAttribute('aria-checked', String(on));
+    });
+    document.querySelectorAll('.swatch').forEach(sw => {
+      const on = sw.dataset.accent.toLowerCase() === String(st.accent).toLowerCase();
+      sw.classList.toggle('is-active', on);
+      sw.setAttribute('aria-checked', String(on));
+    });
+  }
+
+  /* ---------------- 预览刷新（全量，仅初始化与结构性变更时用） ---------------- */
   function repaint() {
     Preview.paint();
     renderTemplates();
@@ -135,7 +155,13 @@ const StylePanel = (() => {
     syncControls();
   }
 
-  /* ---------------- 初始化 ---------------- */
+  /** 样式微调：只更新选中态 + 控件值，不重建 DOM */
+  function onStyleChange() {
+    Preview.paint();
+    syncSelection();
+    syncControls();
+  }
+
   function init() {
     refs = {
       tplGrid: document.getElementById('tplGrid'),
@@ -164,6 +190,7 @@ const StylePanel = (() => {
       photo: document.getElementById('ckPhoto'),
       icon: document.getElementById('ckIcon'),
       rule: document.getElementById('ckRule'),
+      smartMark: document.getElementById('ckSmartMark'),
       dateRight: document.getElementById('ckDateRight'),
       compact: document.getElementById('ckCompact'),
       ats: document.getElementById('ckAts'),
@@ -200,7 +227,8 @@ const StylePanel = (() => {
     }));
 
     const cks = [
-      [refs.photo, 'photo'], [refs.icon, 'icon'], [refs.rule, 'rule'],
+      [refs.photo, 'photo'], [refs.icon, 'icon'],
+      [refs.rule, 'rule'], [refs.smartMark, 'smartMark'],
       [refs.dateRight, 'dateRight'], [refs.compact, 'compact'], [refs.ats, 'ats']
     ];
     cks.forEach(([el, key]) => live(el, () => Store.commitStyle(s => { s[key] = el.checked; })));
@@ -263,5 +291,5 @@ const StylePanel = (() => {
     });
   }
 
-  return { init, repaint, syncControls };
+  return { init, repaint, syncControls, syncSelection, onStyleChange };
 })();
